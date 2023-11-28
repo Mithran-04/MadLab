@@ -1,147 +1,162 @@
 import 'package:flutter/material.dart';
-import 'package:smaple_projectt/sqliteDbHelper.dart';
 
-class MyHomePage extends StatefulWidget {
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
+void main(){
+  runApp(MyApp());
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  // final dbHelper = DatabaseHelper();
+class Task{
+  String title;
+  String desc;
+  Task({required this.title,required this.desc});
+}
 
-  List<Task> tasks = [];
-
+class MyApp extends StatelessWidget{
   @override
-  void initState() {
-    super.initState();
-    // refreshTasks();
-  }
-
-  // void refreshTasks() async {
-  //   List<Task> _tasks = await dbHelper.getAllTasks();
-  //   setState(() {
-  //     tasks = _tasks;
-  //   });
-  // }
-   void updateTask(int index,Task task){
-    setState(() {
-
-    });
-   }
-
-  _showDialog({Task? task}) {
-    print("Dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    // print(dbHelper);
-    TextEditingController titleController =
-    TextEditingController(text: task?.title ?? "");
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(task == null ? 'Add Task' : 'Update Task'),
-          content: TextField(
-            controller: titleController,
-            decoration: InputDecoration(labelText: 'Task Title'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (task == null) {
-                  // Add Task
-                  Task newTask =
-                  Task(title: titleController.text, completed: false);
-                  tasks.add(newTask);
-                  setState(() {
-
-                  });
-                  // await dbHelper.insertTask(newTask);
-                } else {
-                  // Update Task
-                  Task updatedTask = Task(
-                    id: task.id,
-                    title: titleController.text,
-                    completed: task.completed,
-                  );
-                  tasks[task.id]
-                  // await dbHelper.updateTask(updatedTask);
-                }
-
-                refreshTasks();
-                Navigator.of(context).pop();
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
+  Widget build(BuildContext context){
+    return MaterialApp(
+      home: HomePage(),
     );
   }
+}
 
+class HomePage extends StatefulWidget{
   @override
-  Widget build(BuildContext context) {
+  State<HomePage> createState()=>_HomePageState();
+}
+
+class _HomePageState extends State<HomePage>{
+  List<Task> tasks=[];
+  @override
+
+  void _showEditDialog(String title,String desc,int index){
+    TextEditingController titleCt=TextEditingController();
+    TextEditingController descCt=TextEditingController();
+    titleCt.text=title;
+    descCt.text=desc;
+
+    showDialog(context: context, builder:(context){
+      return AlertDialog(
+        title: Text("update"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleCt,
+              decoration: InputDecoration(
+                  hintText: "Title"
+              ),
+            ),
+            TextField(
+              controller: descCt,
+              decoration: InputDecoration(
+                  hintText: "description"
+              ),
+            )
+          ],
+
+        ),
+
+        actions: [
+          TextButton(onPressed: (){
+            Task newTask=Task(title:titleCt.text,desc:descCt.text);
+            setState(() {
+              tasks[index]=newTask;
+            });
+            Navigator.of(context).pop();
+          }, child: Text("update")),
+
+          TextButton(onPressed: (){
+            Navigator.of(context).pop();
+          }, child: Text("cancel"))
+        ],
+
+      );
+    });
+  }
+
+
+  void _showAddDialog(){
+    TextEditingController titleCt=TextEditingController();
+    TextEditingController descCt=TextEditingController();
+    showDialog(context: context, builder: (context){
+      return AlertDialog(
+        title: Text("add"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleCt,
+              decoration: InputDecoration(
+                hintText: "Title"
+              ),
+            ),
+            TextField(
+              controller: descCt,
+              decoration: InputDecoration(
+                hintText: "description"
+              ),
+            )
+          ],
+
+        ),
+
+        actions: [
+          TextButton(onPressed: (){
+            Task newTask=Task(title:titleCt.text,desc:descCt.text);
+            setState(() {
+              tasks.add(newTask);
+            });
+            Navigator.of(context).pop();
+          }, child: Text("add")),
+
+          TextButton(onPressed: (){
+            Navigator.of(context).pop();
+          }, child: Text("cancel"))
+        ],
+      );
+    });
+  }
+
+  void deleteTask(int index){
+    setState(() {
+      tasks.removeAt(index);
+    });
+  }
+
+
+
+
+
+  Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(
-        title: Text('SQLite in Flutter'),
+      appBar: AppBar(title: Text("Hello"),
       ),
       body: ListView.builder(
         itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          Task task = tasks[index];
+          itemBuilder: (context,index){
           return ListTile(
-            leading: Checkbox(
-              value: task.completed,
-              onChanged: (value) async {
-                Task updatedTask = Task(
-                  id: task.id,
-                  title: task.title,
-                  completed: value!,
-                );
-                await dbHelper.updateTask(updatedTask);
-                refreshTasks();
-              },
-              activeColor: Colors.green,
-            ),
-            title: Text(task.title),
-            onTap: () {
-              // Show Update Dialog on tap
-              _showDialog(task: task);
-            },
+            title: Text("${tasks[index].title}"),
+            subtitle: Text(tasks[index].desc),
             trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               children: [
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () async {
-                    // Delete Task
-                    await dbHelper.deleteTask(task.id!);
-                    refreshTasks();
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    // Show Update Dialog
-                    _showDialog(task: task);
-                  },
-                ),
+                IconButton(onPressed: (){
+                  _showEditDialog(tasks[index].title,tasks[index].desc,index);
+                }, icon: Icon(Icons.edit)),
+                IconButton(onPressed: (){
+                  deleteTask(index);
+                }, icon: Icon(Icons.delete))
               ],
             ),
           );
-        },
-      ),
+          }
+          ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Show Add Dialog
-          _showDialog();
-        },
         child: Icon(Icons.add),
+        onPressed: (){ _showAddDialog();
+        setState(() {
+          tasks=tasks;
+        });},
       ),
     );
   }
